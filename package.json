@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "monaco-editor": "^0.8.3",
+    "text": "github:requirejs/text",
+    "typescript": "^2.3.3"
+  }
+}
