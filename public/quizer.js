@@ -29,7 +29,7 @@ let lastRequest = null;
 let lastRequestStarted = null;
 let isRunTestScheduled = false;
 let waitIconTimer = 0;
-let taskDescription = JSON.parse(localStorage.getItem("task") || "null");
+let taskDescription = JSON.parse(localStorage.getItem("quizer-task") || "null");
 window.addEventListener("resize", () => {
     if (editor)
         editor.layout();
@@ -37,12 +37,12 @@ window.addEventListener("resize", () => {
 if (!taskDescription) {
     require(["api/start.js"], (td) => {
         taskDescription = td;
-        localStorage.setItem("task", JSON.stringify(td));
+        localStorage.setItem("quizer-task", JSON.stringify(td));
         startEditor();
     });
 }
 else {
-    taskDescription.code = localStorage.getItem("code") || "";
+    taskDescription.code = localStorage.getItem("quizer-code") || "";
     startEditor();
 }
 function startWorker() {
@@ -88,7 +88,7 @@ function runTest() {
         return;
     }
     statusCharCount.innerHTML = code.length.toFixed(0);
-    localStorage.setItem("code", code);
+    localStorage.setItem("quizer-code", code);
     const request = {
         code: code,
         tests: taskDescription.tests,
