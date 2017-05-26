@@ -1,8 +1,11 @@
 "use strict"
 
 declare var require: any;
+declare var commonmark: any;
 
 interface TaskDescription extends WorkerRequest {
+    target: number;
+    description: string;
 }
 
 require.config({
@@ -32,6 +35,7 @@ let editor: monaco.editor.IStandaloneCodeEditor | null = null;
 const statusBar: HTMLElement = document.getElementById("status-bar") as HTMLElement;
 const statusCharCount: HTMLElement = document.getElementById("status-chars") as HTMLElement;
 const statusCharTarget: HTMLElement = document.getElementById("status-chars-target") as HTMLElement;
+const statusErrorText: HTMLElement = document.getElementById("status-error-text") as HTMLElement;
 
 const maxTestRunTime = 5000;
 let worker = startWorker();
@@ -43,6 +47,17 @@ let taskDescription: TaskDescription = JSON.parse(localStorage.getItem("quizer-t
 
 window.addEventListener("resize", () => {
     if (editor) editor.layout();
+});
+
+(document.getElementById("btn-restore") as HTMLAnchorElement).addEventListener("click", e => {
+    e.preventDefault();
+    if (editor && taskDescription) {
+        if (editor.getValue() === taskDescription.code) {
+            alert("This is already the initial version of the code.");
+        } else if (confirm("Are you sure you want to reset your code to the initial version?")) {
+            editor.setValue(taskDescription.code);
+        }
+    }
 });
 
 if (!taskDescription) {
@@ -66,7 +81,7 @@ function startWorker(): Worker {
 }
 
 function changeStatusIcon(icon: "ok" | "error" | "wait") {
-    if (isRunTestScheduled)
+    if (isRunTestScheduled && icon !== "wait")
         return;
     if (waitIconTimer)
         window.clearTimeout(waitIconTimer);
@@ -76,7 +91,25 @@ function changeStatusIcon(icon: "ok" | "error" | "wait") {
 function processResponse(response: WorkerResponse) {
     lastRequestStarted = null;
     changeStatusIcon(response.pass ? "ok" : "error");
-    console.log(response);
+
+    if (!response.pass) {
+        console.error(response.error);
+        statusErrorText.innerHTML = response.error || "";
+
+        for (const a of statusErrorText.getElementsByClassName("error-pos")) {
+            a.addEventListener("click", (event) => {
+                event.preventDefault();
+                if (editor) {
+                    const anchor = event.currentTarget as HTMLAnchorElement;
+                    const lineNumber = parseInt(anchor.getAttribute("data-line") || "1");
+                    const column = parseInt(anchor.getAttribute("data-col") || "1");
+                    editor.setPosition({ lineNumber, column });
+                    editor.setSelection({ startLineNumber: lineNumber, startColumn: column, endLineNumber: lineNumber, endColumn: column + 1 });
+                    editor.focus();
+                }
+            });
+        }
+    }
 }
 
 function checkTermination() {
@@ -124,6 +157,11 @@ function startEditor() {
         const container = document.getElementById('container');
         if (!container) throw new Error("container missing");
 
+        const description = document.getElementById("description-text");
+
+        if (description) description.innerHTML = md2html(taskDescription.description || "");
+        statusCharTarget.innerHTML = (taskDescription.target || 0).toFixed(0);
+
         monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
             noSemanticValidation: false,
             noSyntaxValidation: false,
@@ -150,4 +188,11 @@ function startEditor() {
         editor.onDidChangeModelContent(runTest);
         runTest();
     });
+}
+
+function md2html(md: string): string {
+    const reader = new commonmark.Parser();
+    const writer = new commonmark.HtmlRenderer();
+    const parsed = reader.parse(md);
+    return writer.render(parsed);
 }

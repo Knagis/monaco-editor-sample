@@ -14,20 +14,76 @@
 			padding: 0;
 			overflow: hidden;
 			background: black;
+			color: #D4D4D4;
 			font-size: 20px;
 			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 		}
+
+		pre {
+			color: khaki;
+		}
+
+		::-webkit-scrollbar {
+			width: 14px;
+		}
+		
+		::-webkit-scrollbar-thumb {
+			background-color: hsla(0,0%,47%,0.1);
+			-webkit-transition: background-color 2s ease;
+		}
+
+		*:hover::-webkit-scrollbar-thumb {
+			background-color: hsla(0,0%,47%,.4);
+		}
+
 		#container {
-			width:100vw;
+			width:70vw;
 			height:calc(100vh - 128px);
 			box-sizing: border-box;
 			border:2px solid #777;
 		}
 
+		#description {
+			height:calc(100vh - 128px - 35px);
+			width: 30vw;
+			box-sizing: border-box;
+			border: 2px solid #777;
+			border-left: 0;
+			background: #1e1e1e;
+			float: right;
+			padding: 5px;
+			font-size: 90%;
+			font-weight: 300;
+			overflow: auto;
+		}
+
+		#actions {
+			text-align: right;
+			width: 30vw;
+			height: 35px;
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			box-sizing: border-box;
+			border: 2px solid #777;
+			border-left: 0;
+			border-top: 0;
+			background: #1e1e1e;
+			padding: 5px;
+			font-size: 90%;
+			font-weight: 300;
+		}
+
+		#actions a, .error-pos {
+			cursor: pointer;
+			color: cornflowerblue;
+			text-decoration: underline;
+		}
+
 		#status-bar {
 			vertical-align: middle;
 			height: 128px;
-			overflow: hidden;
+			white-space: nowrap;
 		}
 
 		.status-icon {
@@ -59,7 +115,7 @@
 			box-sizing: border-box;
 			vertical-align: top;
 			line-height: 128px;
-			padding-right: 265px;
+			overflow: auto;
 		}
 
 		.status-ok .status-msg-ok {
@@ -75,35 +131,44 @@
 		.status-error .status-msg-error {
 			display: inline-block;
 			color: darkred;
+			line-height: 104px;
+		}
+
+		#status-error-text {
+			font-size: 50%;
+			display: block;
+			position: absolute;
+			margin-top: 30px;
+		}
+
+		.status-chars {
+			position: absolute;
+			top: 0;
+			right: 0;
+			padding: 0 10px 0 10px;
+			height: 128px;
+			background: rgba(0,0,0,0.5);
+			color: #ccc;
+			text-align: right;
 		}
 
 		.status-chars-count {
+			display: inline-block;
 			font-size: 24px;
-			line-height: 80px;
-			position: absolute;
-			top: 0;
-			right: 10px;
-			color: #ccc;
 		}
 
 		.status-chars-count > span {
-			font-size: 64px;
-			line-height: 80px;
+			font-size: 58px;
 			color: white;
 		}
 
 		.status-chars-target {
+			display: inline-block;
 			font-size: 24px;
-			line-height: 48px;
-			position: absolute;
-			top: 78px;
-			right: 10px;
-			color: #ccc;
 		}
 
 		.status-chars-target > span {
-			font-size: 48px;
-			line-height: 48px;
+			font-size: 46px;
 			color: white;
 		}
 	</style>
@@ -113,13 +178,26 @@
 <div id="status-bar" class="status-wait">
 	<span class="status-icon"></span>
 	<span class="status-msg status-msg-ok">The tests are passing, keep going!</span>
-	<span class="status-msg status-msg-error">The tests are failing.</span>
+	<span class="status-msg status-msg-error">
+		<span id="status-error-text"></span>
+		The tests are failing.
+	</span>
 	<span class="status-msg status-msg-wait">The tests are running...</span>
+</div>
+<span class="status-chars">
 	<span class="status-chars-count">Current: <span id="status-chars">...</span></span>
+	<br>
 	<span class="status-chars-target">Target: <span id="status-chars-target">...</span></span>
+</span>
+<div id="description">
+	<div id="description-text"></div>
 </div>
 <div id="container"></div>
+<div id="actions">
+	<a id="btn-restore">Restore original code</a>
+</div>
 
+<script src="node_modules/commonmark/dist/commonmark.min.js"></script>
 <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
 <script src="quizer.js"></script>
 </body>

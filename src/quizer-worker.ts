@@ -53,6 +53,12 @@ onmessage = (event) => {
         }
         catch (e) {
             error = e.message;
+            if (e.stack) {
+                const m = (e.stack as string).match(/<anonymous>:(\d+):(\d+)/);
+                if (m) {
+                    error = `<a class="error-pos" data-line="${m[1]}" data-col="${m[2]}">Line ${m[1]}, column ${m[2]}</a>: ${e.message}`;
+                }
+            }
         }
 
         if (error) {

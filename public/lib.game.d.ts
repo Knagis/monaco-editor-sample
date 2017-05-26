@@ -11,8 +11,6 @@ declare function writeline(...args: Array<number|string>): void;
 
 interface Console {
     log(...args: any[]): void;
-    warn(...args: any[]): void;
-    error(...args: any[]): void;
 }
 
 /**
