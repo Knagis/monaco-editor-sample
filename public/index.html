@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+	<title>Evolution Gaming - JS Quizer</title>
+	<style>
+		@-moz-keyframes spin { 100% { -moz-transform: rotate(-360deg); } }
+		@-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
+		@keyframes spin { 100% { -webkit-transform: rotate(-360deg); transform:rotate(-360deg); } }
+
+		body {
+			background: black;
+			font-size: 20px;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+		#container {
+			width:100%;
+			height:600px;
+			border:2px solid #777;
+		}
+
+		#status-bar {
+			vertical-align: middle;
+		}
+
+		.status-icon {
+			width: 128px;
+			height: 128px;
+			display: inline-block;
+			background-size: contain;
+		}
+
+		.status-ok .status-icon {
+			background-image: url("img/ok-icon.png");
+		}
+
+		.status-wait .status-icon {
+			background-image: url("img/loading-icon.png");
+			-webkit-animation:spin 4s linear infinite;
+			-moz-animation:spin 4s linear infinite;
+			animation:spin 4s linear infinite;
+		}
+
+		.status-error .status-icon {
+			background-image: url("img/error-icon.png");
+		}
+
+		.status-msg {
+			font-size: 32px;
+			display: none;
+			height: 128px;
+			box-sizing: border-box;
+			vertical-align: top;
+			line-height: 128px;
+		}
+
+		.status-ok .status-msg-ok {
+			display: inline-block;
+			color: green;
+		}
+
+		.status-wait .status-msg-wait {
+			display: inline-block;
+			color: gray;
+		}
+
+		.status-error .status-msg-error {
+			display: inline-block;
+			color: darkred;
+		}
+	</style>
+</head>
+<body>
+
+<div id="status-bar" class="status-ok">
+	<span class="status-icon"></span>
+	<span class="status-msg status-msg-ok">The tests are passing, keep going!</span>
+	<span class="status-msg status-msg-error">The tests are failing.</span>
+	<span class="status-msg status-msg-wait">The tests are running...</span>
+</div>
+<div id="container"></div>
+
+<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+<script src="quizer.js"></script>
+</body>
+</html>

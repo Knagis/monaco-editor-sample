@@ -1,0 +1,15 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "strict": true,
+        "target": "es6",
+        "outDir": "../public/",
+        "noImplicitUseStrict": true,
+        "alwaysStrict": false
+    },
+    "files": [
+        "../node_modules/monaco-editor/monaco.d.ts",
+        "quizer.ts",
+        "quizer-worker.ts"
+    ]
+}
