@@ -1,0 +1,241 @@
+@-moz-keyframes spin { 100% { -moz-transform: rotate(-360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(-360deg); transform:rotate(-360deg); } }
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black;
+    color: #D4D4D4;
+    font-size: 20px;
+    font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+pre, code {
+    color: khaki;
+    font-family: Inconsolata, Consolas, 'Courier New', monospace;
+}
+
+::-webkit-scrollbar {
+    width: 14px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: hsla(0,0%,47%,0.1);
+    -webkit-transition: background-color 2s ease;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+    background-color: hsla(0,0%,47%,.4);
+}
+
+#container {
+    width:70vw;
+    height:calc(100vh - 128px);
+    box-sizing: border-box;
+    border:2px solid #777;
+}
+
+#description {
+    height:calc(100vh - 128px - 35px);
+    width: 30vw;
+    box-sizing: border-box;
+    border: 2px solid #777;
+    border-left: 0;
+    background: #1e1e1e;
+    float: right;
+    padding: 5px;
+    font-size: 90%;
+    font-weight: 300;
+    overflow: auto;
+}
+
+#actions {
+    text-align: right;
+    width: 30vw;
+    height: 35px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    box-sizing: border-box;
+    border: 2px solid #777;
+    border-left: 0;
+    border-top: 0;
+    background: #1e1e1e;
+    padding: 5px;
+    font-size: 90%;
+    font-weight: 300;
+}
+
+#actions a, .error-pos {
+    cursor: pointer;
+    color: cornflowerblue;
+    text-decoration: underline;
+}
+
+#status-bar {
+    vertical-align: middle;
+    height: 128px;
+    white-space: nowrap;
+}
+
+.status-icon {
+    width: 128px;
+    height: 128px;
+    display: inline-block;
+    background-size: contain;
+}
+
+.status-ok .status-icon {
+    background-image: url("img/ok-icon.png");
+}
+
+.status-wait .status-icon {
+    background-image: url("img/loading-icon.png");
+    -webkit-animation:spin 4s linear infinite;
+    -moz-animation:spin 4s linear infinite;
+    animation:spin 4s linear infinite;
+}
+
+.status-error .status-icon {
+    background-image: url("img/error-icon.png");
+}
+
+.status-msg {
+    font-size: 32px;
+    display: none;
+    height: 128px;
+    box-sizing: border-box;
+    vertical-align: top;
+    line-height: 128px;
+    overflow: auto;
+}
+
+.status-ok .status-msg-ok {
+    display: inline-block;
+    color: green;
+}
+
+.status-wait .status-msg-wait {
+    display: inline-block;
+    color: gray;
+}
+
+.status-error .status-msg-error {
+    display: inline-block;
+    color: darkred;
+    line-height: 104px;
+}
+
+#status-error-text {
+    font-size: 50%;
+    display: block;
+    position: absolute;
+    margin-top: 30px;
+}
+
+#status-clock {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    right: 230px;
+    padding: 0 10px 0 10px;
+    height: 128px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-align: center;
+    font-size: 64px;
+    line-height: 128px;
+}
+
+#status-clock.danger {
+    color: crimson;
+}		
+
+.status-chars {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0 10px 0 10px;
+    height: 128px;
+    background: rgba(0,0,0,0.5);
+    color: #ccc;
+    text-align: right;
+}
+
+.status-chars-count {
+    display: inline-block;
+    font-size: 24px;
+}
+
+.status-chars-count > span {
+    font-size: 56px;
+    color: white;
+}
+
+.status-chars-target {
+    display: inline-block;
+    font-size: 24px;
+}
+
+.status-chars-target > span {
+    font-size: 40px;
+    color: white;
+}
+
+.center-container {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+    border: 2px solid #777;
+    background: #1e1e1e;
+    max-height: 80vh;
+    overflow: auto;
+    padding: 20px;
+}
+
+.center {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(0,0,0,0.5);
+}
+
+.center, .center tr, .center td {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.center h1 {
+    text-align: center;
+}
+
+.btn-green, .btn-blue {
+    font-size: 150%;
+    display: inline-block;
+    background: rgb(28, 184, 65);
+    border-radius: 4px;
+    padding: 0.2em 1em;
+    text-shadow: rgba(0, 0, 0, 0.4) 0px 1px 1px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-green:hover, .btn-blue:hover {
+    background-image: -webkit-linear-gradient(transparent,rgba(0,0,0,.05) 40%,rgba(0,0,0,.1));
+    background-image: linear-gradient(transparent,rgba(0,0,0,.05) 40%,rgba(0,0,0,.1))
+}
+.btn-green:active, .btn-blue:active {
+    box-shadow: 0 0 0 1px rgba(255,255,255,.35) inset,0 0 6px rgba(255,255,255,.4) inset;
+    border-color: #fff;
+}        
+
+.btn-blue {
+    background: rgb(66, 184, 221);
+    float: right;
+}

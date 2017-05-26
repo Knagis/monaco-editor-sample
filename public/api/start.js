@@ -24,6 +24,7 @@ writeline(total);
         { input: ["0"], output: ["0"] },
     ],
     target: 100,
+    duration: 50,
     description: `
 Shorten the given code as much as possible within the given time. Everything can
 go as long as the tests are still green.

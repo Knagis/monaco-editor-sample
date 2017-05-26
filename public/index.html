@@ -4,201 +4,57 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 	<title>Evolution Gaming - JS Quizer</title>
-	<style>
-		@-moz-keyframes spin { 100% { -moz-transform: rotate(-360deg); } }
-		@-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
-		@keyframes spin { 100% { -webkit-transform: rotate(-360deg); transform:rotate(-360deg); } }
-
-		body {
-			margin: 0;
-			padding: 0;
-			overflow: hidden;
-			background: black;
-			color: #D4D4D4;
-			font-size: 20px;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		}
-
-		pre {
-			color: khaki;
-		}
-
-		::-webkit-scrollbar {
-			width: 14px;
-		}
-		
-		::-webkit-scrollbar-thumb {
-			background-color: hsla(0,0%,47%,0.1);
-			-webkit-transition: background-color 2s ease;
-		}
-
-		*:hover::-webkit-scrollbar-thumb {
-			background-color: hsla(0,0%,47%,.4);
-		}
-
-		#container {
-			width:70vw;
-			height:calc(100vh - 128px);
-			box-sizing: border-box;
-			border:2px solid #777;
-		}
-
-		#description {
-			height:calc(100vh - 128px - 35px);
-			width: 30vw;
-			box-sizing: border-box;
-			border: 2px solid #777;
-			border-left: 0;
-			background: #1e1e1e;
-			float: right;
-			padding: 5px;
-			font-size: 90%;
-			font-weight: 300;
-			overflow: auto;
-		}
-
-		#actions {
-			text-align: right;
-			width: 30vw;
-			height: 35px;
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			box-sizing: border-box;
-			border: 2px solid #777;
-			border-left: 0;
-			border-top: 0;
-			background: #1e1e1e;
-			padding: 5px;
-			font-size: 90%;
-			font-weight: 300;
-		}
-
-		#actions a, .error-pos {
-			cursor: pointer;
-			color: cornflowerblue;
-			text-decoration: underline;
-		}
-
-		#status-bar {
-			vertical-align: middle;
-			height: 128px;
-			white-space: nowrap;
-		}
-
-		.status-icon {
-			width: 128px;
-			height: 128px;
-			display: inline-block;
-			background-size: contain;
-		}
-
-		.status-ok .status-icon {
-			background-image: url("img/ok-icon.png");
-		}
-
-		.status-wait .status-icon {
-			background-image: url("img/loading-icon.png");
-			-webkit-animation:spin 4s linear infinite;
-			-moz-animation:spin 4s linear infinite;
-			animation:spin 4s linear infinite;
-		}
-
-		.status-error .status-icon {
-			background-image: url("img/error-icon.png");
-		}
-
-		.status-msg {
-			font-size: 32px;
-			display: none;
-			height: 128px;
-			box-sizing: border-box;
-			vertical-align: top;
-			line-height: 128px;
-			overflow: auto;
-		}
-
-		.status-ok .status-msg-ok {
-			display: inline-block;
-			color: green;
-		}
-
-		.status-wait .status-msg-wait {
-			display: inline-block;
-			color: gray;
-		}
-
-		.status-error .status-msg-error {
-			display: inline-block;
-			color: darkred;
-			line-height: 104px;
-		}
-
-		#status-error-text {
-			font-size: 50%;
-			display: block;
-			position: absolute;
-			margin-top: 30px;
-		}
-
-		.status-chars {
-			position: absolute;
-			top: 0;
-			right: 0;
-			padding: 0 10px 0 10px;
-			height: 128px;
-			background: rgba(0,0,0,0.5);
-			color: #ccc;
-			text-align: right;
-		}
-
-		.status-chars-count {
-			display: inline-block;
-			font-size: 24px;
-		}
-
-		.status-chars-count > span {
-			font-size: 58px;
-			color: white;
-		}
-
-		.status-chars-target {
-			display: inline-block;
-			font-size: 24px;
-		}
-
-		.status-chars-target > span {
-			font-size: 46px;
-			color: white;
-		}
-	</style>
+	<link rel="stylesheet" href="fonts/open-sans-v13.css" />
+	<link rel="stylesheet" href="fonts/inconsolata-v15.css" />
+	<link rel="stylesheet" href="style.css" />
 </head>
 <body>
+    <table class="center"><tr><td>
+    <div class="center-container">
+        <h1>Evolution Gaming</h1>
+        <p>Upon starting the game, you will be presented with a coding task and in most cases an already implemented solution.</p>
+        <p>
+            Your task, unless stated otherwise, is to reduce the number of characters used in the implementation below a certain
+            target while ensuring that all tests still pass.
+        </p>
+        <p>Note that the task has to be completed within the allocated time limit.</p>
+        <a class="btn-green" id="btn-new">Start new game</a>
+        <a class="btn-blue" id="btn-resume">Resume</a>
+    </div>
+    </td></tr></table></body>
+    <script>
+        const btnResume = document.getElementById("btn-resume");
+        const btnNew = document.getElementById("btn-new");
+        let isGameRunning = true;
+        function checkCurrentGame() {
+            let newState = !!localStorage.getItem("quizer-task");
+            if (newState !== isGameRunning) {
+                isGameRunning = newState;
+                btnResume.style.display = isGameRunning ? "" : "none";
+            }
+        }
+        window.setInterval(checkCurrentGame, 1000);
+        checkCurrentGame();
 
-<div id="status-bar" class="status-wait">
-	<span class="status-icon"></span>
-	<span class="status-msg status-msg-ok">The tests are passing, keep going!</span>
-	<span class="status-msg status-msg-error">
-		<span id="status-error-text"></span>
-		The tests are failing.
-	</span>
-	<span class="status-msg status-msg-wait">The tests are running...</span>
-</div>
-<span class="status-chars">
-	<span class="status-chars-count">Current: <span id="status-chars">...</span></span>
-	<br>
-	<span class="status-chars-target">Target: <span id="status-chars-target">...</span></span>
-</span>
-<div id="description">
-	<div id="description-text"></div>
-</div>
-<div id="container"></div>
-<div id="actions">
-	<a id="btn-restore">Restore original code</a>
-</div>
+        btnResume.addEventListener("click", e => {
+            e.preventDefault();
+            checkCurrentGame();
+            if (isGameRunning)
+                document.location = "editor.html";
+        });
 
-<script src="node_modules/commonmark/dist/commonmark.min.js"></script>
-<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
-<script src="quizer.js"></script>
-</body>
+        btnNew.addEventListener("click", e => {
+            e.preventDefault();
+            checkCurrentGame();
+
+            if (isGameRunning && !confirm("Are you sure you want to interrupt the current session?"))
+                return;
+
+            localStorage.removeItem("quizer-task");
+            localStorage.removeItem("quizer-code");
+            localStorage.removeItem("quizer-time");
+
+            document.location.href = "editor.html";
+        });
+    </script>
 </html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+	<title>Evolution Gaming - JS Quizer</title>
+	<link rel="stylesheet" href="fonts/open-sans-v13.css" />
+	<link rel="stylesheet" href="fonts/inconsolata-v15.css" />
+	<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="status-bar" class="status-wait">
+	<span class="status-icon"></span>
+	<span class="status-msg status-msg-ok">The tests are passing, keep going!</span>
+	<span class="status-msg status-msg-error">
+		<span id="status-error-text"></span>
+		The tests are failing.
+	</span>
+	<span class="status-msg status-msg-wait">The tests are running...</span>
+</div>
+<span id="status-clock"></span>
+<span class="status-chars">
+	<span class="status-chars-count">Current: <span id="status-chars">...</span></span>
+	<br>
+	<span class="status-chars-target">Target: <span id="status-chars-target">...</span></span>
+</span>
+<div id="description">
+	<div id="description-text"></div>
+</div>
+<div id="container"></div>
+<div id="actions">
+	<a id="btn-restore">Restore original code</a>
+</div>
+
+<table class="center" id="finish-overlay" style="display: none"><tr><td>
+    <div class="center-container">
+		<h1 id="finish-title"></h1>
+		<p id="finish-description"></p>
+		<a class="btn-green" id="btn-finish">Continue</a>
+    </div>
+</td></tr></table>
+
+<script src="node_modules/commonmark/dist/commonmark.min.js"></script>
+<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+<script src="quizer.js"></script>
+</body>
+</html>
