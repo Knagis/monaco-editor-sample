@@ -21,12 +21,30 @@ const libs = [
 ];
 let editor = null;
 const statusBar = document.getElementById("status-bar");
+const statusCharCount = document.getElementById("status-chars");
+const statusCharTarget = document.getElementById("status-chars-target");
 const maxTestRunTime = 5000;
 let worker = startWorker();
 let lastRequest = null;
 let lastRequestStarted = null;
 let isRunTestScheduled = false;
 let waitIconTimer = 0;
+let taskDescription = JSON.parse(localStorage.getItem("task") || "null");
+window.addEventListener("resize", () => {
+    if (editor)
+        editor.layout();
+});
+if (!taskDescription) {
+    require(["api/start.js"], (td) => {
+        taskDescription = td;
+        localStorage.setItem("task", JSON.stringify(td));
+        startEditor();
+    });
+}
+else {
+    taskDescription.code = localStorage.getItem("code") || "";
+    startEditor();
+}
 function startWorker() {
     const worker = new Worker("quizer-worker.js");
     worker.onmessage = (event) => {
@@ -36,6 +54,8 @@ function startWorker() {
     return worker;
 }
 function changeStatusIcon(icon) {
+    if (isRunTestScheduled)
+        return;
     if (waitIconTimer)
         window.clearTimeout(waitIconTimer);
     statusBar.className = "status-" + icon;
@@ -67,62 +87,44 @@ function runTest() {
     if (lastRequest && lastRequest.code === code) {
         return;
     }
+    statusCharCount.innerHTML = code.length.toFixed(0);
+    localStorage.setItem("code", code);
     const request = {
         code: code,
-        tests: [
-            { input: ["2", "2 1", "5 3"], output: ["3", "8", "11"] },
-            { input: ["0"], output: ["0"] },
-        ]
+        tests: taskDescription.tests,
     };
     lastRequestStarted = new Date();
     worker.postMessage(request);
     window.setTimeout(checkTermination, maxTestRunTime + 500);
     waitIconTimer = window.setTimeout(() => { changeStatusIcon("wait"); }, 200);
 }
-require([...libs, 'vs/editor/editor.main'], (...args) => {
-    const container = document.getElementById('container');
-    if (!container)
-        throw new Error("container missing");
-    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: false,
-        noSyntaxValidation: false,
+function startEditor() {
+    require([...libs, 'vs/editor/editor.main'], (...libSource) => {
+        const container = document.getElementById('container');
+        if (!container)
+            throw new Error("container missing");
+        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+            noSemanticValidation: false,
+            noSyntaxValidation: false,
+        });
+        monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+            allowNonTsExtensions: true,
+            noEmit: true,
+            noLib: true,
+        });
+        for (let i = 0; i < libs.length; i++) {
+            monaco.languages.typescript.javascriptDefaults.addExtraLib(libSource[i], libs[i]);
+        }
+        editor = monaco.editor.create(container, {
+            value: taskDescription.code,
+            language: 'javascript',
+            renderControlCharacters: true,
+            renderWhitespace: "all",
+            theme: "vs-dark",
+            fontSize: 20,
+        });
+        editor.focus();
+        editor.onDidChangeModelContent(runTest);
+        runTest();
     });
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-        allowNonTsExtensions: true,
-        noEmit: true,
-        noLib: true,
-    });
-    for (let i = 0; i < libs.length; i++) {
-        monaco.languages.typescript.javascriptDefaults.addExtraLib(args[i], libs[i]);
-    }
-    editor = monaco.editor.create(container, {
-        value: `const lineCount = parseInt(readline());
-const lines = new Array(lineCount);
-for (let i = 0; i < lineCount; i++) {
-    lines[i] = readline();
 }
-
-let total = 0;
-for (const line of lines) {
-    let lineTotal = 0;
-    const numbers = line.split(" ");
-    for (const num of numbers) {
-        lineTotal += parseInt(num);
-        total += parseInt(num);
-    }
-
-    writeline(lineTotal);
-}
-
-writeline(total);
-`,
-        language: 'javascript',
-        renderControlCharacters: true,
-        renderWhitespace: "all",
-        theme: "vs-dark",
-        fontSize: 20
-    });
-    editor.focus();
-    editor.onDidChangeModelContent(runTest);
-    runTest();
-});

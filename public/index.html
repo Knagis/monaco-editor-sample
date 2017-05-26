@@ -22,6 +22,8 @@
 
 		#status-bar {
 			vertical-align: middle;
+			height: 132px;
+			overflow: hidden;
 		}
 
 		.status-icon {
@@ -53,6 +55,7 @@
 			box-sizing: border-box;
 			vertical-align: top;
 			line-height: 128px;
+			padding-right: 265px;
 		}
 
 		.status-ok .status-msg-ok {
@@ -69,15 +72,47 @@
 			display: inline-block;
 			color: darkred;
 		}
+
+		.status-chars-count {
+			font-size: 24px;
+			line-height: 80px;
+			position: absolute;
+			top: 0;
+			right: 10px;
+			color: #ccc;
+		}
+
+		.status-chars-count > span {
+			font-size: 64px;
+			line-height: 80px;
+			color: white;
+		}
+
+		.status-chars-target {
+			font-size: 24px;
+			line-height: 48px;
+			position: absolute;
+			top: 80px;
+			right: 10px;
+			color: #ccc;
+		}
+
+		.status-chars-target > span {
+			font-size: 48px;
+			line-height: 48px;
+			color: white;
+		}
 	</style>
 </head>
 <body>
 
-<div id="status-bar" class="status-ok">
+<div id="status-bar" class="status-wait">
 	<span class="status-icon"></span>
 	<span class="status-msg status-msg-ok">The tests are passing, keep going!</span>
 	<span class="status-msg status-msg-error">The tests are failing.</span>
 	<span class="status-msg status-msg-wait">The tests are running...</span>
+	<span class="status-chars-count">Current: <span id="status-chars">...</span></span>
+	<span class="status-chars-target">Target: <span id="status-chars-target">...</span></span>
 </div>
 <div id="container"></div>
 
