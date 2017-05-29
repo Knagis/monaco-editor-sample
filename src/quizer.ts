@@ -184,10 +184,10 @@ function processResponse(response: WorkerResponse) {
     }
 
     if (!response.pass) {
-        console.error(response.error);
+        console.error((response.error || "").replace(/<a.+?>(.+?)<\/a>/g, "$1"));
         statusErrorText.innerHTML = response.error || "";
 
-        for (const a of statusErrorText.getElementsByClassName("error-pos")) {
+        for (const a of Array.from(statusErrorText.getElementsByClassName("error-pos"))) {
             a.addEventListener("click", (event) => {
                 event.preventDefault();
                 if (editor) {
