@@ -14,6 +14,7 @@ onmessage = (event) => {
             output.push(args ? args.join("") : "");
         };
         let error = null;
+        const selfValues = captureSelf();
         try {
             execute(request.code, consoleWrapper, readline, writeline);
             if (output.length < test.output.length)
@@ -38,6 +39,9 @@ onmessage = (event) => {
                 }
             }
         }
+        finally {
+            restoreSelf(selfValues);
+        }
         if (error) {
             postMessage({ pass: false, error: `Test #${testIndex}: ${error}` });
             return;
@@ -45,6 +49,28 @@ onmessage = (event) => {
     }
     postMessage({ pass: true });
 };
+function captureSelf() {
+    return Object.assign({}, self);
+}
+function restoreSelf(values) {
+    for (const key of Object.keys(self)) {
+        const valueBefore = values[key];
+        const valueNow = self[key];
+        if (valueBefore === valueNow) {
+            continue;
+        }
+        if (valueBefore === void 0) {
+            delete self[key];
+            continue;
+        }
+        try {
+            self[key] = valueBefore;
+        }
+        catch (e) {
+            console.warn(`Cannot restore the value of global '${key}'.`);
+        }
+    }
+}
 function execute(code, console, readline, writeline) {
     const onmessage = null;
     const close = null;

@@ -31,6 +31,8 @@ onmessage = (event) => {
         };
 
         let error: string | null = null;
+        const selfValues = captureSelf();
+
         try {
             execute(
                 request.code,
@@ -50,8 +52,7 @@ onmessage = (event) => {
                     }
                 }
             }
-        }
-        catch (e) {
+        } catch (e) {
             error = e.message;
             if (e.stack) {
                 const m = (e.stack as string).match(/<anonymous>:(\d+):(\d+)/);
@@ -59,6 +60,8 @@ onmessage = (event) => {
                     error = `<a class="error-pos" data-line="${m[1]}" data-col="${m[2]}">Line ${m[1]}, column ${m[2]}</a>: ${e.message}`;
                 }
             }
+        } finally {
+            restoreSelf(selfValues);
         }
 
         if (error) {
@@ -69,6 +72,31 @@ onmessage = (event) => {
 
     (<any>postMessage)({ pass: true });
 };
+
+function captureSelf() {
+    return Object.assign({}, self);
+}
+
+function restoreSelf(values: any) {
+    for (const key of Object.keys(self) as Array<keyof typeof self>) {
+        const valueBefore = values[key];
+        const valueNow = self[key];
+        if (valueBefore === valueNow) {
+            continue;
+        }
+
+        if (valueBefore === void 0) {
+            delete self[key];
+            continue;
+        }
+
+        try {
+            (self as any)[key] = valueBefore;
+        } catch (e) {
+            console.warn(`Cannot restore the value of global '${key}'.`);
+        }
+    }
+}
 
 function execute(code: string, console: any, readline: Function, writeline: Function): void {
     const onmessage = null;
