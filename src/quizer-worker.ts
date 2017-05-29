@@ -7,11 +7,12 @@ interface WorkerRequest {
 }
 
 interface WorkerResponse {
+    needTermination?: boolean;
     pass: boolean;
     error?: string;
 }
 
-(function () {
+(function (execute: Function) {
 
     onmessage = messageHandler;
     freezeSelf();
@@ -20,9 +21,6 @@ interface WorkerResponse {
 
     function messageHandler(event: MessageEvent) {
         const request = event.data as WorkerRequest;
-        const consoleWrapper = {
-            log: (...args: any[]) => console.log.apply(console, args),
-        };
 
         for (let testIndex = 0; testIndex < request.tests.length; testIndex++) {
             const test = request.tests[testIndex];
@@ -38,12 +36,12 @@ interface WorkerResponse {
             };
 
             let error: string | null = null;
+            let needTermination: boolean;
             const selfValues = captureSelf();
 
             try {
                 execute(
                     request.code,
-                    consoleWrapper,
                     readline,
                     writeline);
 
@@ -64,11 +62,16 @@ interface WorkerResponse {
                 if (e.stack) {
                     const m = (e.stack as string).match(/<anonymous>:(\d+):(\d+)/);
                     if (m) {
-                        error = `<a class="error-pos" data-line="${m[1]}" data-col="${m[2]}">Line ${m[1]}, column ${m[2]}</a>: ${e.message}`;
+                        error = `[${m[1]}:${m[2]}]: ${e.message}`;
                     }
                 }
             } finally {
-                restoreSelf(selfValues);
+                needTermination = restoreSelf(selfValues);
+            }
+
+            if (needTermination) {
+                (<any>postMessage)({ needTermination: true, pass: false, error: `Test #${testIndex}: found persistent global variable` });
+                return;
             }
 
             if (error) {
@@ -91,18 +94,36 @@ interface WorkerResponse {
             "Uint8Array", "Uint8ClampedArray", "Uint16Array", "Uint32Array", "WeakMap", "WeakSet",
             "decodeURI", "decodeURIComponent", "encodeURI", "encodeURIComponent", "escape", "eval",
             "isFinite", "isNaN", "parseFloat", "parseInt", "undefined", "unescape",
-            "onmessage", "postMessage"
+            "onmessage", "postMessage", "btoa", "atob"
         ];
 
-        for (const key of Object.getOwnPropertyNames(s)) {
+        for (const key of getAllPropertyNames(s)) {
             const isAllowed = allowedKeys.indexOf(key) > -1;
             const value = s[key];
 
             if (!isAllowed) {
                 delete s[key];
-            }
 
-            freezeObjectDeep(value);
+                if (s[key]) {
+                    try {
+                        Object.defineProperty(s, key, {
+                            value: void 0,
+                            configurable: false,
+                            writable: false,
+                        });
+                    } catch (e) {
+                    }
+
+                    if (s[key]) {
+                        console.warn("Could not delete", key, s[key]);
+                    }
+                }
+            }
+        }
+
+        const alreadyFrozed: any[] = [self];
+        for (const key of getAllPropertyNames(s)) {
+            freezeObjectDeep(s[key], alreadyFrozed);
         }
     }
 
@@ -138,34 +159,46 @@ interface WorkerResponse {
         for (const key of getAllPropertyNames(self)) {
             s[key] = (self as any)[key];
         }
+
+        delete self.onmessage;
+        delete self.postMessage;
+
         return s;
     }
 
     function restoreSelf(values: any) {
-        for (const key of getAllPropertyNames(self)) {
-            const valueBefore = values[key];
-            const valueNow = (self as any)[key];
-            if (valueBefore === valueNow) {
-                continue;
-            }
+        const s = self as any;
 
-            if (valueBefore === void 0) {
-                delete (self as any)[key];
+        self.onmessage = values.onmessage;
+        self.postMessage = values.postMessage;
+
+        let needTermination = false;
+        let terminationMsg = "Congratulations! You almost managed to persist a value across test runs. But still I caught you!";
+
+        for (const key of getAllPropertyNames(s)) {
+            const valueBefore = values[key];
+            const valueNow = s[key];
+            if (key === "__proto__" || valueBefore === valueNow || (isNaN(valueBefore) && isNaN(valueNow))) {
                 continue;
             }
 
             try {
-                (self as any)[key] = valueBefore;
+                s[key] = valueBefore;
             } catch (e) {
-                console.warn(`Cannot restore the value of global '${key}'.`);
+            }
+
+            if (s[key] !== valueBefore) {
+                console.warn(terminationMsg, "Variable name: " + key);
+                needTermination = true;
             }
         }
+
+        return needTermination;
     }
 
-    function execute(code: string, console: any, readline: Function, writeline: Function): void {
-        const onmessage = null;
-        const postMessage = null;
-        const self = null;
+
+})(
+    function execute(code: string, readline: Function, writeline: Function): void {
         eval(code);
     }
-})();
+);

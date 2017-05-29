@@ -1,12 +1,9 @@
-(function () {
+(function (execute) {
     onmessage = messageHandler;
     freezeSelf();
     return; // only function definitions follow
     function messageHandler(event) {
         const request = event.data;
-        const consoleWrapper = {
-            log: (...args) => console.log.apply(console, args),
-        };
         for (let testIndex = 0; testIndex < request.tests.length; testIndex++) {
             const test = request.tests[testIndex];
             let lineCounter = 0;
@@ -18,9 +15,10 @@
                 output.push(args ? args.join("") : "");
             };
             let error = null;
+            let needTermination;
             const selfValues = captureSelf();
             try {
-                execute(request.code, consoleWrapper, readline, writeline);
+                execute(request.code, readline, writeline);
                 if (output.length < test.output.length)
                     error = "The output is missing lines";
                 else if (output.length > test.output.length)
@@ -39,12 +37,16 @@
                 if (e.stack) {
                     const m = e.stack.match(/<anonymous>:(\d+):(\d+)/);
                     if (m) {
-                        error = `<a class="error-pos" data-line="${m[1]}" data-col="${m[2]}">Line ${m[1]}, column ${m[2]}</a>: ${e.message}`;
+                        error = `[${m[1]}:${m[2]}]: ${e.message}`;
                     }
                 }
             }
             finally {
-                restoreSelf(selfValues);
+                needTermination = restoreSelf(selfValues);
+            }
+            if (needTermination) {
+                postMessage({ needTermination: true, pass: false, error: `Test #${testIndex}: found persistent global variable` });
+                return;
             }
             if (error) {
                 postMessage({ pass: false, error: `Test #${testIndex}: ${error}` });
@@ -64,15 +66,32 @@
             "Uint8Array", "Uint8ClampedArray", "Uint16Array", "Uint32Array", "WeakMap", "WeakSet",
             "decodeURI", "decodeURIComponent", "encodeURI", "encodeURIComponent", "escape", "eval",
             "isFinite", "isNaN", "parseFloat", "parseInt", "undefined", "unescape",
-            "onmessage", "postMessage"
+            "onmessage", "postMessage", "btoa", "atob"
         ];
-        for (const key of Object.getOwnPropertyNames(s)) {
+        for (const key of getAllPropertyNames(s)) {
             const isAllowed = allowedKeys.indexOf(key) > -1;
             const value = s[key];
             if (!isAllowed) {
                 delete s[key];
+                if (s[key]) {
+                    try {
+                        Object.defineProperty(s, key, {
+                            value: void 0,
+                            configurable: false,
+                            writable: false,
+                        });
+                    }
+                    catch (e) {
+                    }
+                    if (s[key]) {
+                        console.warn("Could not delete", key, s[key]);
+                    }
+                }
             }
-            freezeObjectDeep(value);
+        }
+        const alreadyFrozed = [self];
+        for (const key of getAllPropertyNames(s)) {
+            freezeObjectDeep(s[key], alreadyFrozed);
         }
     }
     function freezeObjectDeep(obj, alreadyVisited = []) {
@@ -102,31 +121,34 @@
         for (const key of getAllPropertyNames(self)) {
             s[key] = self[key];
         }
+        delete self.onmessage;
+        delete self.postMessage;
         return s;
     }
     function restoreSelf(values) {
-        for (const key of getAllPropertyNames(self)) {
+        const s = self;
+        self.onmessage = values.onmessage;
+        self.postMessage = values.postMessage;
+        let needTermination = false;
+        let terminationMsg = "Congratulations! You almost managed to persist a value across test runs. But still I caught you!";
+        for (const key of getAllPropertyNames(s)) {
             const valueBefore = values[key];
-            const valueNow = self[key];
-            if (valueBefore === valueNow) {
-                continue;
-            }
-            if (valueBefore === void 0) {
-                delete self[key];
+            const valueNow = s[key];
+            if (key === "__proto__" || valueBefore === valueNow || (isNaN(valueBefore) && isNaN(valueNow))) {
                 continue;
             }
             try {
-                self[key] = valueBefore;
+                s[key] = valueBefore;
             }
             catch (e) {
-                console.warn(`Cannot restore the value of global '${key}'.`);
+            }
+            if (s[key] !== valueBefore) {
+                console.warn(terminationMsg, "Variable name: " + key);
+                needTermination = true;
             }
         }
+        return needTermination;
     }
-    function execute(code, console, readline, writeline) {
-        const onmessage = null;
-        const postMessage = null;
-        const self = null;
-        eval(code);
-    }
-})();
+})(function execute(code, readline, writeline) {
+    eval(code);
+});

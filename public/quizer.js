@@ -139,6 +139,11 @@
     function processResponse(response) {
         changeStatusIcon(response.pass ? "ok" : "error");
         isTestRunning = false;
+        if (response.needTermination) {
+            worker.onmessage = () => { };
+            worker.terminate();
+            worker = startWorker();
+        }
         if (response.pass && lastRequest && lastRequest.code.length <= taskDescription.target) {
             if (!localStorage.getItem("quizer-time"))
                 localStorage.setItem("quizer-time", (lastRequestStarted || new Date()).toISOString());
@@ -146,8 +151,11 @@
             return;
         }
         if (!response.pass) {
-            console.error((response.error || "").replace(/<a.+?>(.+?)<\/a>/g, "$1"));
-            statusErrorText.innerHTML = response.error || "";
+            console.error((response.error || ""));
+            statusErrorText.innerHTML =
+                (response.error || "")
+                    .replace(/</g, "&lt;")
+                    .replace(/\[(\d+):(\d+)\]/g, "<a class='error-pos' data-line='$1' data-col='$2'>Line $1, column $2</a>");
             for (const a of Array.from(statusErrorText.getElementsByClassName("error-pos"))) {
                 a.addEventListener("click", (event) => {
                     event.preventDefault();
