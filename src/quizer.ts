@@ -44,12 +44,11 @@ declare var commonmark: any;
     const maxTestRunTime = 5000;
     let worker = startWorker();
     let lastRequest: WorkerRequest | null = null;
-    let lastRequestStarted: Date | null = null;
     let isRunTestScheduled = false;
-    let isTestRunning = false;
     let waitIconTimer = 0;
     let isFinished = false;
     let taskDescription: TaskDescription | null = readTaskDescription();
+    let bestWorkingCode: WorkerRequest | null = readBestSolution();
 
     const beep = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");
 
@@ -73,10 +72,9 @@ declare var commonmark: any;
         e.preventDefault();
         localStorage.removeItem("quizer-task");
         localStorage.removeItem("quizer-code");
-        localStorage.removeItem("quizer-time");
+        localStorage.removeItem("quizer-done");
         document.location.href = "index.html";
     });
-
 
     if (!taskDescription) {
         require(["api/start.js"], (td: TaskDescription) => {
@@ -95,7 +93,7 @@ declare var commonmark: any;
         if (isFinished || !taskDescription)
             return;
 
-        if (timeout && (isTestRunning || !lastRequest)) {
+        if (timeout && (lastRequest || !bestWorkingCode)) {
             // wait for the test to finish - perhaps it was successful and this is not a timeout after all
             window.setTimeout(() => finishSession(true), 500);
             return;
@@ -118,9 +116,24 @@ declare var commonmark: any;
         (document.getElementById("finish-overlay") as HTMLElement).style.display = "";
         (document.getElementById("finish-title") as HTMLElement).innerHTML = timeout ? "Time ran out" : "You did it!";
 
-        (document.getElementById("finish-description") as HTMLElement).innerHTML = timeout
-            ? "Unfortunately you did not complete the task in the given time. Better luck next time!"
-            : "Congratulations on completing the task! You did it in " + formatTime(taskDescription.duration * 1000 - taskDescription.endTimestamp + Date.parse(localStorage.getItem("quizer-time") || "")) + ".";
+        if (!bestWorkingCode) {
+            return;
+        }
+
+        let msg: string = "";
+
+        if (timeout) {
+            msg += "Unfortunately you did not complete the task in the given time. Better luck next time!";
+        } else {
+            msg += "Congratulations on completing the task! You did it in " + formatTime(taskDescription.duration * 1000 - taskDescription.endTimestamp + bestWorkingCode.timestamp) + ".";
+        }
+
+        let codeLength = bestWorkingCode.code.length;
+
+        msg += "<br><br>";
+        msg += "Your best result is " + codeLength.toFixed(0) + " character" + ((codeLength % 10 === 1 && codeLength % 100 !== 11) ? "" : "s") + ".";
+
+        (document.getElementById("finish-description") as HTMLElement).innerHTML = msg;
     }
 
     function formatTime(ms: number) {
@@ -175,7 +188,8 @@ declare var commonmark: any;
     function processResponse(response: WorkerResponse) {
         changeStatusIcon(response.pass ? "ok" : "error");
 
-        isTestRunning = false;
+        const request = lastRequest;
+        lastRequest = null;
 
         if (response.needTermination) {
             worker.onmessage = () => { };
@@ -183,14 +197,22 @@ declare var commonmark: any;
             worker = startWorker();
         }
 
-        if (taskDescription && response.pass && lastRequest && lastRequest.code.length <= taskDescription.target) {
-            if (!localStorage.getItem("quizer-time"))
-                localStorage.setItem("quizer-time", (lastRequestStarted || new Date()).toISOString());
-            finishSession(false);
+        if (!request) {
+            console.error("Response from tester received but no request is pending.");
             return;
         }
 
-        if (!response.pass) {
+        if (response.pass) {
+            if (!bestWorkingCode || (request.code.length < bestWorkingCode.code.length)) {
+                bestWorkingCode = request;
+            }
+
+            if (taskDescription && request.code.length <= taskDescription.target) {
+                storeBestSolution();
+                finishSession(false);
+                return;
+            }
+        } else {
             console.error((response.error || ""));
             statusErrorText.innerHTML = 
                 (response.error || "")
@@ -214,10 +236,10 @@ declare var commonmark: any;
     }
 
     function checkTermination() {
-        if (isTestRunning && lastRequestStarted && new Date().valueOf() - lastRequestStarted.valueOf() > maxTestRunTime) {
+        if (lastRequest && new Date().valueOf() - lastRequest.timestamp > maxTestRunTime) {
             worker.onmessage = () => { };
             worker.terminate();
-            isTestRunning = false;
+            lastRequest = null;
 
             if (!isFinished) {
                 worker = startWorker();
@@ -229,7 +251,7 @@ declare var commonmark: any;
     function runTest() {
         checkTermination();
 
-        if (!editor || isTestRunning || !taskDescription) {
+        if (!editor || lastRequest || !taskDescription) {
             if (!isRunTestScheduled) {
                 window.setTimeout(runTest, 500);
                 isRunTestScheduled = true;
@@ -239,9 +261,6 @@ declare var commonmark: any;
         isRunTestScheduled = false;
 
         const code = editor.getValue({ lineEnding: "\n", preserveBOM: false });
-        if (lastRequest && lastRequest.code === code) {
-            return;
-        }
 
         statusCharCount.innerHTML = code.length.toFixed(0);
         localStorage.setItem("quizer-code", code);
@@ -249,11 +268,10 @@ declare var commonmark: any;
         const request: WorkerRequest = {
             code: code,
             tests: taskDescription.tests,
+            timestamp: Date.now(),
         };
 
         lastRequest = request;
-        lastRequestStarted = new Date();
-        isTestRunning = true;
         worker.postMessage(request);
         window.setTimeout(checkTermination, maxTestRunTime + 500);
         waitIconTimer = window.setTimeout(() => { changeStatusIcon("wait") }, 200);
@@ -342,6 +360,27 @@ declare var commonmark: any;
 
     function readTaskDescription(): TaskDescription | null {
         let ls = localStorage.getItem("quizer-task");
+        if (!ls) {
+            return null;
+        }
+
+        let json = ls;
+        try {
+            json = atob(json);
+        } catch (e) {
+        }
+        
+        return JSON.parse(json);
+    }
+
+    function storeBestSolution() {
+        if (!localStorage.getItem("quizer-done")) {
+            localStorage.setItem("quizer-done", btoa(JSON.stringify(bestWorkingCode)));
+        }
+    }
+
+    function readBestSolution() : WorkerRequest | null {
+        let ls = localStorage.getItem("quizer-done");
         if (!ls) {
             return null;
         }

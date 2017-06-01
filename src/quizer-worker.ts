@@ -4,6 +4,7 @@ interface WorkerRequest {
         input: string[];
         output: string[];
     }>;
+    timestamp: number;
 }
 
 interface WorkerResponse {
